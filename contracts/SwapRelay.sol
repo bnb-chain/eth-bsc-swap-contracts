@@ -5,7 +5,7 @@ import "./IBEP20.sol";
 contract SwapRelay {
     uint256 public relayFee;
     address payable public relayer;
-    address private _owner;
+    address public owner;
 
     struct TokenConfig {
         uint256 lowerBound;
@@ -22,7 +22,7 @@ contract SwapRelay {
     }
 
     constructor (address payable relayerAddr) public {
-        _owner = msg.sender;
+        owner = msg.sender;
         relayer = relayerAddr;
     }
 
@@ -69,10 +69,8 @@ contract SwapRelay {
         relayer.transfer(msg.value);
 
         bool success = IBEP20(contractAddr).transfer(relayer, amount);
-        if (success) {
-            emit transferSuccess(contractAddr, relayer, amount);
-        } else {
-            require(false, "transfer token failed");
-        }
+        require(success, "transfer token failed");
+
+        emit transferSuccess(contractAddr, relayer, amount);
     }
 }
