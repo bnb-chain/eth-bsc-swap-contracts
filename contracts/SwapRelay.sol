@@ -31,12 +31,7 @@ contract SwapRelay {
         return true;
     }
 
-    function updateRelayerAddress(address addr) public onlyOwner returns (bool) {
-        relayer = addr;
-        return true;
-    }
-
-    function updateRelayerAddress(address addr) public onlyOwner returns (bool) {
+    function updateRelayerAddress(address payable addr) public onlyOwner returns (bool) {
         relayer = addr;
         return true;
     }
