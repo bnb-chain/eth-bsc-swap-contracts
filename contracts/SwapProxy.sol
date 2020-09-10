@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IBEP20.sol";
 
 contract SwapProxy is Context, Ownable {
-    uint256 public relayFee;
-    bool public status;
+    uint256 public swapFee;
+    bool public status; // true for enabled; false for disabled;
 
     struct TokenConfig {
         address contractAddr;
@@ -27,12 +27,8 @@ contract SwapProxy is Context, Ownable {
     event tokenRemove(address indexed contractAddr);
 
     constructor (uint256 fee) public {
-        relayFee = fee;
-    }
-
-    function close() public onlyOwner {
-        address payable ownerAddr = payable(owner());
-        selfdestruct(ownerAddr);
+        swapFee = fee;
+        status = true;
     }
 
     function setStatus(bool statusToUpdate) public onlyOwner returns (bool) {
@@ -41,8 +37,8 @@ contract SwapProxy is Context, Ownable {
         return true;
     }
 
-    function updateRelayFee(uint256 fee) onlyOwner external returns (bool) {
-        relayFee = fee;
+    function updateSwapFee(uint256 fee) onlyOwner external returns (bool) {
+        swapFee = fee;
         emit feeUpdate(fee);
         return true;
     }
@@ -100,15 +96,16 @@ contract SwapProxy is Context, Ownable {
     }
 
     function swap(address contractAddr, uint256 amount) payable external returns (bool) {
-        require(msg.value >= relayFee, "received BNB amount should be equal to the amount of relayFee");
+        require(status, "swap proxy is disabled");
+        require(msg.value >= swapFee, "received BNB amount should be equal to the amount of swapFee");
         require(amount > 0, "amount should be larger than 0");
 
         uint256 index = tokenIndexMap[contractAddr];
-        require(index > 0, "token does not exist");
+        require(index > 0, "token does is not supported");
 
         TokenConfig memory tokenConfig = tokens[index - 1];
-        require(amount >= tokenConfig.lowerBound, "amount should be larger than lower bound");
-        require(amount <= tokenConfig.upperBound, "amount should be less than upper bound");
+        require(amount >= tokenConfig.lowerBound, "amount should not be less than lower bound");
+        require(amount <= tokenConfig.upperBound, "amount should not be larger than upper bound");
 
         address payable relayerAddr = payable(tokenConfig.relayer);
 
