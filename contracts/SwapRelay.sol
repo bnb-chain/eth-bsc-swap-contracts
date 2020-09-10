@@ -7,7 +7,6 @@ import "./Ownable.sol";
 contract SwapRelay is Context, Ownable {
     uint256 public relayFee;
     address payable public relayer;
-    address public owner;
 
     struct TokenConfig {
         uint256 lowerBound;
@@ -19,13 +18,7 @@ contract SwapRelay is Context, Ownable {
 
     event transferSuccess(address contractAddr, address toAddr, uint256 amount);
 
-    modifier onlyOwner() {
-        require(owner == msg.sender, "caller is not the owner");
-        _;
-    }
-
     constructor (address payable relayerAddr) public {
-        owner = msg.sender;
         relayer = relayerAddr;
     }
 
