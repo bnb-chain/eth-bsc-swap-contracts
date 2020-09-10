@@ -1,8 +1,10 @@
 pragma solidity 0.6.4;
 
 import "./IBEP20.sol";
+import "./Context.sol";
+import "./Ownable.sol";
 
-contract SwapRelay {
+contract SwapRelay is Context, Ownable {
     uint256 public relayFee;
     address payable public relayer;
     address public owner;
@@ -10,6 +12,7 @@ contract SwapRelay {
     struct TokenConfig {
         uint256 lowerBound;
         uint256 upperBound;
+        bool    exists;
     }
 
     mapping(address => TokenConfig) public tokens;
@@ -17,7 +20,7 @@ contract SwapRelay {
     event transferSuccess(address contractAddr, address toAddr, uint256 amount);
 
     modifier onlyOwner() {
-        require(_owner == msg.sender, "caller is not the owner");
+        require(owner == msg.sender, "caller is not the owner");
         _;
     }
 
@@ -36,12 +39,11 @@ contract SwapRelay {
         return true;
     }
 
-    function addToken(address contractAddr, uint256 lowerBound, uint256 upperBound) public onlyOwner returns (bool) {
-        require(!tokens[contractAddr], "token already added");
-
+    function addOrUpdateToken(address contractAddr, uint256 lowerBound, uint256 upperBound) public onlyOwner returns (bool) {
         TokenConfig memory tokenConfig = TokenConfig({
             lowerBound: lowerBound,
-            upperBound: upperBound
+            upperBound: upperBound,
+            exists:     true
         });
 
         tokens[contractAddr] = tokenConfig;
@@ -49,21 +51,23 @@ contract SwapRelay {
     }
 
     function removeToken(address contractAddr) public onlyOwner returns (bool) {
-        require(tokens[contractAddr], "token does not exist");
+        require(tokens[contractAddr].exists, "token does not exist");
 
         delete tokens[contractAddr];
         return true;
     }
 
-    function transfer(address contractAddr, uint256 amount) external {
-        require(tokens[contractAddr], "token is not supported");
-        require(amount > tokens[contractAddr].lowerBound, "amount should be larger than lower bound");
-        require(amount < tokens[contractAddr].upperBound, "amount should be less than upper bound");
-        require(msg.value >= fee, "received BNB amount should be equal to the amount of relayFee");
+    function transfer(address contractAddr, uint256 amount) payable external {
+        require(msg.value >= relayFee, "received BNB amount should be equal to the amount of relayFee");
+
+        TokenConfig memory tokenConfig = tokens[contractAddr];
+        require(tokenConfig.exists, "token is not supported");
+        require(amount > tokenConfig.lowerBound, "amount should be larger than lower bound");
+        require(amount < tokenConfig.upperBound, "amount should be less than upper bound");
 
         relayer.transfer(msg.value);
 
-        bool success = IBEP20(contractAddr).transfer(relayer, amount);
+        bool success = IBEP20(contractAddr).transferFrom(msg.sender, relayer, amount);
         require(success, "transfer token failed");
 
         emit transferSuccess(contractAddr, relayer, amount);
