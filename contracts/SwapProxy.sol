@@ -8,6 +8,7 @@ import "./IBEP20.sol";
 contract SwapProxy is Context, Ownable {
     uint256 public swapFee;
     bool public status; // true for enabled; false for disabled;
+    uint256 public tokenCount;
 
     struct TokenConfig {
         address contractAddr;
@@ -61,6 +62,8 @@ contract SwapProxy is Context, Ownable {
         } else {
             tokens[index - 1] = tokenConfig;
         }
+
+        tokenCount = tokens.length;
         emit tokenAdd(contractAddr, relayer, lowerBound, upperBound);
         return true;
     }
@@ -79,6 +82,7 @@ contract SwapProxy is Context, Ownable {
             tokenIndexMap[tokens[index - 1].contractAddr] = index;
         }
         tokens.pop();
+        tokenCount = tokens.length;
 
         emit tokenRemove(contractAddr);
         return true;
@@ -101,7 +105,7 @@ contract SwapProxy is Context, Ownable {
         require(amount > 0, "amount should be larger than 0");
 
         uint256 index = tokenIndexMap[contractAddr];
-        require(index > 0, "token does is not supported");
+        require(index > 0, "token is not supported");
 
         TokenConfig memory tokenConfig = tokens[index - 1];
         require(amount >= tokenConfig.lowerBound, "amount should not be less than lower bound");
