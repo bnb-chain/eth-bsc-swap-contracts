@@ -1,8 +1,9 @@
 pragma solidity 0.6.4;
 
+import "@openzeppelin/contracts/GSN/Context.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 import "./IBEP20.sol";
-import "./Context.sol";
-import "./Ownable.sol";
 
 contract SwapRelay is Context, Ownable {
     uint256 public relayFee;
@@ -44,7 +45,8 @@ contract SwapRelay is Context, Ownable {
     }
 
     function removeToken(address contractAddr) public onlyOwner returns (bool) {
-        require(tokens[contractAddr].exists, "token does not exist");
+        TokenConfig memory tokenConfig = tokens[contractAddr];
+        require(tokenConfig.exists, "token does not exist");
 
         delete tokens[contractAddr];
         return true;
