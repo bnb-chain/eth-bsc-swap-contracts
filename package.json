@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "flatten": "truffle-flattener contracts/SwapRelay.sol > contracts/flattened/SwapRelay.sol"
+    "flatten": "truffle-flattener contracts/SwapProxy.sol > contracts/flattened/SwapProxy.sol"
   },
   "author": "",
   "license": "MIT",

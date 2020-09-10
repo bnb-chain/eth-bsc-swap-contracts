@@ -191,73 +191,127 @@ interface IBEP20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-// File: contracts/SwapRelay.sol
+// File: contracts/SwapProxy.sol
 
 pragma solidity 0.6.4;
 
 
 
 
-contract SwapRelay is Context, Ownable {
+contract SwapProxy is Context, Ownable {
     uint256 public relayFee;
-    address payable public relayer;
+    bool public status;
 
     struct TokenConfig {
+        address contractAddr;
         uint256 lowerBound;
         uint256 upperBound;
-        bool    exists;
+        address relayer;
     }
 
-    mapping(address => TokenConfig) public tokens;
+    TokenConfig[] public tokens;
+    mapping(address => uint256) public tokenIndexMap;
 
-    event transferSuccess(address contractAddr, address toAddr, uint256 amount);
+    event tokenTransfer(address indexed contractAddr, address indexed toAddr, uint256 indexed amount);
+    event bnbTransfer(address indexed toAddr, uint256 indexed amount);
+    event feeUpdate(uint256 fee);
+    event statusUpdate(bool status);
+    event tokenAdd(address indexed contractAddr, address indexed relayer, uint256 lowerBound, uint256 upperBound);
+    event tokenRemove(address indexed contractAddr);
 
-    constructor (address payable relayerAddr) public {
-        relayer = relayerAddr;
-    }
-
-    function updateRelayFee(uint256 fee) public onlyOwner returns (bool) {
+    constructor (uint256 fee) public {
         relayFee = fee;
+    }
+
+    function close() public onlyOwner {
+        address payable ownerAddr = payable(owner());
+        selfdestruct(ownerAddr);
+    }
+
+    function setStatus(bool statusToUpdate) public onlyOwner returns (bool) {
+        status = statusToUpdate;
+        emit statusUpdate(statusToUpdate);
         return true;
     }
 
-    function updateRelayerAddress(address payable addr) public onlyOwner returns (bool) {
-        relayer = addr;
+    function updateRelayFee(uint256 fee) onlyOwner external returns (bool) {
+        relayFee = fee;
+        emit feeUpdate(fee);
         return true;
     }
 
-    function addOrUpdateToken(address contractAddr, uint256 lowerBound, uint256 upperBound) public onlyOwner returns (bool) {
+    function addOrUpdateToken(address contractAddr, address relayer, uint256 lowerBound, uint256 upperBound) onlyOwner external returns (bool) {
+        require(contractAddr != address(0x0), "contract address should not be empty");
+        require(relayer != address(0x0), "relayer address should not be empty");
+
         TokenConfig memory tokenConfig = TokenConfig({
-            lowerBound: lowerBound,
-            upperBound: upperBound,
-            exists:     true
+            contractAddr:    contractAddr,
+            lowerBound:     lowerBound,
+            upperBound:     upperBound,
+            relayer:        relayer
         });
 
-        tokens[contractAddr] = tokenConfig;
+        uint256 index = tokenIndexMap[contractAddr];
+        if (index == 0) {
+            tokens.push(tokenConfig);
+            tokenIndexMap[contractAddr] = tokens.length;
+        } else {
+            tokens[index - 1] = tokenConfig;
+        }
+        emit tokenAdd(contractAddr, relayer, lowerBound, upperBound);
         return true;
     }
 
-    function removeToken(address contractAddr) public onlyOwner returns (bool) {
-        TokenConfig memory tokenConfig = tokens[contractAddr];
-        require(tokenConfig.exists, "token does not exist");
+    function removeToken(address contractAddr) onlyOwner external returns (bool) {
+        require(contractAddr != address(0x0), "contract address should not be empty");
 
-        delete tokens[contractAddr];
+        uint256 index = tokenIndexMap[contractAddr];
+        require(index > 0, "token does not exist");
+
+        TokenConfig memory tokenConfig = tokens[index - 1];
+        delete tokenIndexMap[tokenConfig.contractAddr];
+
+        if (index != tokens.length) {
+            tokens[index - 1] = tokens[tokens.length - 1];
+            tokenIndexMap[tokens[index - 1].contractAddr] = index;
+        }
+        tokens.pop();
+
+        emit tokenRemove(contractAddr);
         return true;
     }
 
-    function transfer(address contractAddr, uint256 amount) payable external {
-        require(msg.value >= relayFee, "received BNB amount should be equal to the amount of relayFee");
+    function transfer(address contractAddr, address to,  uint256 amount) onlyOwner external returns (bool) {
+        require(amount > 0, "amount should be larger than 0");
+        require(contractAddr != address(0x0), "contract address should not be empty");
+        require(to != address(0x0), "relayer address should not be empty");
 
-        TokenConfig memory tokenConfig = tokens[contractAddr];
-        require(tokenConfig.exists, "token is not supported");
-        require(amount > tokenConfig.lowerBound, "amount should be larger than lower bound");
-        require(amount < tokenConfig.upperBound, "amount should be less than upper bound");
-
-        relayer.transfer(msg.value);
-
-        bool success = IBEP20(contractAddr).transferFrom(msg.sender, relayer, amount);
+        bool success = IBEP20(contractAddr).transfer(to, amount);
         require(success, "transfer token failed");
 
-        emit transferSuccess(contractAddr, relayer, amount);
+        return true;
+    }
+
+    function swap(address contractAddr, uint256 amount) payable external returns (bool) {
+        require(msg.value >= relayFee, "received BNB amount should be equal to the amount of relayFee");
+        require(amount > 0, "amount should be larger than 0");
+
+        uint256 index = tokenIndexMap[contractAddr];
+        require(index > 0, "token does not exist");
+
+        TokenConfig memory tokenConfig = tokens[index - 1];
+        require(amount >= tokenConfig.lowerBound, "amount should be larger than lower bound");
+        require(amount <= tokenConfig.upperBound, "amount should be less than upper bound");
+
+        address payable relayerAddr = payable(tokenConfig.relayer);
+
+        relayerAddr.transfer(msg.value);
+
+        bool success = IBEP20(contractAddr).transferFrom(msg.sender, relayerAddr, amount);
+        require(success, "transfer token failed");
+
+        emit tokenTransfer(contractAddr, relayerAddr, amount);
+        emit bnbTransfer(relayerAddr, msg.value);
+        return true;
     }
 }
