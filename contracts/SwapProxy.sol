@@ -9,8 +9,7 @@ contract SwapProxy is Context, Ownable {
     uint256 public swapFee;
     address payable public relayer;
 
-    event tokenTransfer(address indexed contractAddr, address indexed fromAddr, address indexed toAddr, uint256 amount);
-    event feeTransfer(address indexed fromAddr, address indexed toAddr, uint256 indexed amount);
+    event tokenTransfer(address indexed contractAddr, address indexed fromAddr, address indexed toAddr, uint256 amount, uint256 feeAmount);
 
     constructor (address payable relayerAddr, uint256 fee) public {
         relayer = relayerAddr;
@@ -31,8 +30,7 @@ contract SwapProxy is Context, Ownable {
         bool success = IBEP20(contractAddr).transferFrom(msg.sender, relayer, amount);
         require(success, "transfer token failed");
 
-        emit tokenTransfer(contractAddr, msg.sender, relayer, amount);
-        emit feeTransfer(msg.sender, relayer, msg.value);
+        emit tokenTransfer(contractAddr, msg.sender, relayer, amount, msg.value);
         return true;
     }
 }
