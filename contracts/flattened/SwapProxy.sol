@@ -198,7 +198,7 @@ pragma solidity 0.6.4;
 
 
 
-contract SwapProxy is Context, Ownable {
+contract SwapProxy is Ownable {
     uint256 public swapFee;
     address payable public relayer;
 
@@ -215,7 +215,7 @@ contract SwapProxy is Context, Ownable {
     }
 
     function swap(address contractAddr, uint256 amount) payable external returns (bool) {
-        require(msg.value >= swapFee, "received fee amount should be equal to the amount of swapFee");
+        require(msg.value >= swapFee, "fee amount should not be less than the amount of swapFee");
         require(amount > 0, "amount should be larger than 0");
 
         relayer.transfer(msg.value);

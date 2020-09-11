@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./IBEP20.sol";
 
-contract SwapProxy is Context, Ownable {
+contract SwapProxy is Ownable {
     uint256 public swapFee;
     address payable public relayer;
 
