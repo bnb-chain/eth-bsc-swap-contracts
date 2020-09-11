@@ -1,8 +1,7 @@
 pragma solidity 0.6.4;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-import "./IBEP20.sol";
 
 contract SwapProxy is Ownable {
     uint256 public swapFee;
@@ -26,7 +25,7 @@ contract SwapProxy is Ownable {
 
         relayer.transfer(msg.value);
 
-        bool success = IBEP20(contractAddr).transferFrom(msg.sender, relayer, amount);
+        bool success = IERC20(contractAddr).transferFrom(msg.sender, relayer, amount);
         require(success, "transfer token failed");
 
         emit tokenTransfer(contractAddr, msg.sender, relayer, amount, msg.value);
