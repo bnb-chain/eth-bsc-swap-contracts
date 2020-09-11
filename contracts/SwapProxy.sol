@@ -1,6 +1,5 @@
 pragma solidity 0.6.4;
 
-import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./IBEP20.sol";
