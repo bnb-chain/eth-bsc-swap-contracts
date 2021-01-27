@@ -1,11 +1,19 @@
 pragma solidity 0.6.4;
 
-contract  ETHSwapAgent {
+import "openzeppelin-solidity/contracts/proxy/Initializable.sol";
+
+contract  ETHSwapAgent is Initializable {
     event SwapPairRegister(address indexed contractAddr, address indexed fromAddr);
-    event SwapStart(address indexed contractAddr, address indexed fromAddr, address indexed toAddr, uint256 amount, uint256 feeAmount);
+    event SwapStarted(address indexed contractAddr, address indexed fromAddr, address indexed toAddr, uint256 amount, uint256 feeAmount);
     event SwapFilled(address indexed contractAddr, bytes32 indexed bscTxHash, address indexed toAddress, uint256 amount);
 
-    function createSwapPair(address contractAddr) external returns (bool) {
+    constructor() public {
+    }
+
+    function initialize(string memory name, string memory symbol, uint8 decimals, uint256 amount, bool mintable, address owner) public initializer {
+    }
+
+    function registerSwapToBSC(address contractAddr) external returns (bool) {
         return true;
     }
 
