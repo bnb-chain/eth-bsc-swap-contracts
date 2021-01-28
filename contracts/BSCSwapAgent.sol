@@ -11,9 +11,10 @@ contract  BSCSwapAgent is Context, Initializable {
     mapping(address => address) public swapMappingETH2BSC;
     mapping(address => address) public swapMappingBSC2ETH;
 
-    address payable private _owner;
-    address private _bep20Implementation;
-    uint256 private _swapFee;
+    address payable public owner;
+    address public bep20ProxyAdmin;
+    address public bep20Implementation;
+    uint256 public swapFee;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event SwapPairCreated(bytes32 indexed ethRegisterTxHash, address indexed bep20Addr, address indexed erc20Addr, string symbol, string name, uint8 decimals);
@@ -27,26 +28,27 @@ contract  BSCSwapAgent is Context, Initializable {
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
-        require(_owner == _msgSender(), "Ownable: caller is not the owner");
+        require(owner == _msgSender(), "Ownable: caller is not the owner");
         _;
     }
 
-    function initialize(address bep20Impl, uint256 swapFee, address payable owner) public initializer {
-        _bep20Implementation = bep20Impl;
-        _swapFee = swapFee;
-        _owner = owner;
+    function initialize(address bep20Impl, uint256 fee, address payable ownerAddr, address bep20ProxyAdminAddr) public initializer {
+        bep20Implementation = bep20Impl;
+        swapFee = fee;
+        owner = ownerAddr;
+        bep20ProxyAdmin = bep20ProxyAdminAddr;
     }
 
     /**
-        * @dev Leaves the contract without owner. It will not be possible to call
-        * `onlyOwner` functions anymore. Can only be called by the current owner.
-        *
-        * NOTE: Renouncing ownership will leave the contract without an owner,
-        * thereby removing any functionality that is only available to the owner.
-        */
+    * @dev Leaves the contract without owner. It will not be possible to call
+    * `onlyOwner` functions anymore. Can only be called by the current owner.
+    *
+    * NOTE: Renouncing ownership will leave the contract without an owner,
+    * thereby removing any functionality that is only available to the owner.
+    */
     function renounceOwnership() public onlyOwner {
-        emit OwnershipTransferred(_owner, address(0));
-        _owner = address(0);
+        emit OwnershipTransferred(owner, address(0));
+        owner = address(0);
     }
 
     /**
@@ -55,36 +57,15 @@ contract  BSCSwapAgent is Context, Initializable {
      */
     function transferOwnership(address payable newOwner) public onlyOwner {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
-        emit OwnershipTransferred(_owner, newOwner);
-        _owner = newOwner;
-    }
-
-    /**
-     * @dev Returns the bep token owner.
-     */
-    function owner() external view returns (address) {
-        return _owner;
-    }
-
-    /**
-     * @dev Returns the bep20 implementation address
-     */
-    function bep20Implementation() external view returns (address) {
-        return _bep20Implementation;
-    }
-
-    /**
-     * @dev Returns minimum swap fee from BEP20 to ERC20
-     */
-    function swapFee() external view returns (uint256) {
-        return _swapFee;
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
     }
 
     /**
      * @dev Returns set minimum swap fee from BEP20 to ERC20
      */
-    function setSwapFee(uint256 swapFee) onlyOwner external {
-        _swapFee = swapFee;
+    function setSwapFee(uint256 fee) onlyOwner external {
+        swapFee = fee;
     }
 
     /**
@@ -93,7 +74,7 @@ contract  BSCSwapAgent is Context, Initializable {
     function createSwapPair(bytes32 ethTxHash, address erc20Addr, string calldata name, string calldata symbol, uint8 decimals) onlyOwner external returns (address) {
         require(swapMappingETH2BSC[erc20Addr] == address(0x0), "duplicated swap pair");
 
-        BEP20UpgradeableProxy proxyToken = new BEP20UpgradeableProxy(_bep20Implementation, msg.sender, "");
+        BEP20UpgradeableProxy proxyToken = new BEP20UpgradeableProxy(bep20Implementation, bep20ProxyAdmin, "");
         IProxyInitialize token = IProxyInitialize(address(proxyToken));
         token.initialize(name, symbol, decimals, 0, true, address(this));
 
@@ -122,12 +103,12 @@ contract  BSCSwapAgent is Context, Initializable {
      */
     function swapBSC2ETH(address bep20Addr, uint256 amount) payable external returns (bool) {
         require(swapMappingBSC2ETH[bep20Addr] != address(0x0), "no swap pair for this token");
-        require(msg.value >= _swapFee, "swap fee is not enough");
+        require(msg.value >= swapFee, "swap fee is not enough");
 
         IBEP20(bep20Addr).transferFrom(msg.sender, address(this), amount);
         ISwap(bep20Addr).burn(amount);
         if (msg.value != 0) {
-            _owner.transfer(msg.value);
+            owner.transfer(msg.value);
         }
 
         emit SwapStarted(bep20Addr, msg.sender, amount, msg.value);

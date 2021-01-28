@@ -9,11 +9,11 @@ contract ETHSwapAgent is Context, Initializable {
     using SafeERC20 for IERC20;
 
     mapping(address => bool) public registeredERC20;
-    address payable private _owner;
-    uint256 private _swapFee;
+    address payable public owner;
+    uint256 public swapFee;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    event SwapPairRegister(address indexed contractAddr, string name, string symbol, uint8 decimals);
+    event SwapPairRegister(address indexed erc20Addr, string name, string symbol, uint8 decimals);
     event SwapStarted(address indexed erc20Addr, address indexed fromAddr, uint256 amount, uint256 feeAmount);
     event SwapFilled(address indexed erc20Addr, bytes32 indexed bscTxHash, address indexed toAddress, uint256 amount);
 
@@ -24,13 +24,13 @@ contract ETHSwapAgent is Context, Initializable {
      * @dev Throws if called by any account other than the owner.
      */
     modifier onlyOwner() {
-        require(_owner == _msgSender(), "Ownable: caller is not the owner");
+        require(owner == _msgSender(), "Ownable: caller is not the owner");
         _;
     }
 
-    function initialize(uint256 swapFee, address payable owner) public initializer {
-        _swapFee = swapFee;
-        _owner = owner;
+    function initialize(uint256 fee, address payable ownerAddr) public initializer {
+        swapFee = fee;
+        owner = ownerAddr;
     }
 
     /**
@@ -41,8 +41,8 @@ contract ETHSwapAgent is Context, Initializable {
         * thereby removing any functionality that is only available to the owner.
         */
     function renounceOwnership() public onlyOwner {
-        emit OwnershipTransferred(_owner, address(0));
-        _owner = address(0);
+        emit OwnershipTransferred(owner, address(0));
+        owner = address(0);
     }
 
     /**
@@ -51,29 +51,15 @@ contract ETHSwapAgent is Context, Initializable {
      */
     function transferOwnership(address payable newOwner) public onlyOwner {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
-        emit OwnershipTransferred(_owner, newOwner);
-        _owner = newOwner;
-    }
-
-    /**
-     * @dev Returns the bep token owner.
-     */
-    function owner() external view returns (address) {
-        return _owner;
-    }
-
-    /**
-     * @dev Returns minimum swap fee from ERC20 to BEP20
-     */
-    function swapFee() external view returns (uint256) {
-        return _swapFee;
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
     }
 
     /**
      * @dev Returns set minimum swap fee from ERC20 to BEP20
      */
-    function setSwapFee(uint256 swapFee) onlyOwner external {
-        _swapFee = swapFee;
+    function setSwapFee(uint256 fee) onlyOwner external {
+        swapFee = fee;
     }
 
     function registerSwapToBSC(address erc20Addr) external returns (bool) {
@@ -82,7 +68,10 @@ contract ETHSwapAgent is Context, Initializable {
         string memory name = IERC20Query(erc20Addr).name();
         string memory symbol = IERC20Query(erc20Addr).symbol();
         uint8 decimals = IERC20Query(erc20Addr).decimals();
-        //TODO add checks
+
+        require(bytes(name).length>0, "empty name");
+        require(bytes(symbol).length>0, "empty symbol");
+
         registeredERC20[erc20Addr] = true;
 
         emit SwapPairRegister(erc20Addr, name, symbol, decimals);
@@ -98,11 +87,11 @@ contract ETHSwapAgent is Context, Initializable {
 
     function swapETH2BSC(address erc20Addr, uint256 amount) payable external returns (bool) {
         require(registeredERC20[erc20Addr], "not registered token");
-        require(msg.value >= _swapFee, "swap fee is not enough");
+        require(msg.value >= swapFee, "swap fee is not enough");
 
         IERC20(erc20Addr).safeTransferFrom(msg.sender, address(this), amount);
         if (msg.value != 0) {
-            _owner.transfer(msg.value);
+            owner.transfer(msg.value);
         }
 
         emit SwapStarted(erc20Addr, msg.sender, amount, msg.value);
