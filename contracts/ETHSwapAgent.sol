@@ -1,10 +1,13 @@
 pragma solidity 0.6.4;
 
-import "./interfaces/IERC20.sol";
+import "./interfaces/IERC20Query.sol";
 import "openzeppelin-solidity/contracts/proxy/Initializable.sol";
 import "openzeppelin-solidity/contracts/GSN/Context.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
-contract  ETHSwapAgent is Context, Initializable {
+contract ETHSwapAgent is Context, Initializable {
+    using SafeERC20 for IERC20;
+
     mapping(address => bool) public registeredERC20;
     address payable private _owner;
     uint256 private _swapFee;
@@ -76,9 +79,9 @@ contract  ETHSwapAgent is Context, Initializable {
     function registerSwapToBSC(address erc20Addr) external returns (bool) {
         require(!registeredERC20[erc20Addr], "already registered");
 
-        string memory name = IERC20(erc20Addr).name();
-        string memory symbol = IERC20(erc20Addr).symbol();
-        uint8 decimals = IERC20(erc20Addr).decimals();
+        string memory name = IERC20Query(erc20Addr).name();
+        string memory symbol = IERC20Query(erc20Addr).symbol();
+        uint8 decimals = IERC20Query(erc20Addr).decimals();
         //TODO add checks
         registeredERC20[erc20Addr] = true;
 
@@ -87,7 +90,8 @@ contract  ETHSwapAgent is Context, Initializable {
     }
 
     function fillBSC2ETHSwap(bytes32 bscTxHash, address erc20Addr, address toAddress, uint256 amount) onlyOwner external returns (bool) {
-        IERC20(erc20Addr).transfer(toAddress, amount);  //TODO change to safeTransfer
+        require(registeredERC20[erc20Addr], "not registered token");
+        IERC20(erc20Addr).safeTransfer(toAddress, amount);
         emit SwapFilled(erc20Addr, bscTxHash, toAddress, amount);
         return true;
     }
@@ -96,7 +100,7 @@ contract  ETHSwapAgent is Context, Initializable {
         require(registeredERC20[erc20Addr], "not registered token");
         require(msg.value >= _swapFee, "swap fee is not enough");
 
-        IERC20(erc20Addr).transferFrom(msg.sender, address(this), amount); //TODO change to safeTransferFrom
+        IERC20(erc20Addr).safeTransferFrom(msg.sender, address(this), amount);
         if (msg.value != 0) {
             _owner.transfer(msg.value);
         }
