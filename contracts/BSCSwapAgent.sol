@@ -16,7 +16,7 @@ contract  BSCSwapAgent is Context, Initializable {
     uint256 private _swapFee;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    event SwapPairCreated(address indexed bep20Addr, address indexed erc20Addr, string symbol, string name, uint8 decimals);
+    event SwapPairCreated(bytes32 indexed ethRegisterTxHash, address indexed bep20Addr, address indexed erc20Addr, string symbol, string name, uint8 decimals);
     event SwapStarted(address indexed bep20Addr, address indexed fromAddr, uint256 amount, uint256 feeAmount);
     event SwapFilled(address indexed bep20Addr, bytes32 indexed ethTxHash, address indexed toAddress, uint256 amount);
 
@@ -81,9 +81,16 @@ contract  BSCSwapAgent is Context, Initializable {
     }
 
     /**
+     * @dev Returns set minimum swap fee from BEP20 to ERC20
+     */
+    function setSwapFee(uint256 swapFee) onlyOwner external {
+        _swapFee = swapFee;
+    }
+
+    /**
      * @dev createSwapPair
      */
-    function createSwapPair(address erc20Addr, string calldata name, string calldata symbol, uint8 decimals) onlyOwner external returns (address) {
+    function createSwapPair(bytes32 ethTxHash, address erc20Addr, string calldata name, string calldata symbol, uint8 decimals) onlyOwner external returns (address) {
         require(swapMappingETH2BSC[erc20Addr] == address(0x0), "duplicated swap pair");
 
         BEP20UpgradeableProxy proxyToken = new BEP20UpgradeableProxy(_bep20Implementation, msg.sender, "");
@@ -93,7 +100,7 @@ contract  BSCSwapAgent is Context, Initializable {
         swapMappingETH2BSC[erc20Addr] = address(token);
         swapMappingBSC2ETH[address(token)] = erc20Addr;
 
-        emit SwapPairCreated(address(token), erc20Addr, symbol, name, decimals);
+        emit SwapPairCreated(ethTxHash, address(token), erc20Addr, symbol, name, decimals);
         return address(token);
     }
 
@@ -119,7 +126,9 @@ contract  BSCSwapAgent is Context, Initializable {
 
         IBEP20(bep20Addr).transferFrom(msg.sender, address(this), amount);
         ISwap(bep20Addr).burn(amount);
-        _owner.transfer(msg.value);
+        if (msg.value != 0) {
+            _owner.transfer(msg.value);
+        }
 
         emit SwapStarted(bep20Addr, msg.sender, amount, msg.value);
         return true;
