@@ -1,11 +1,12 @@
 pragma solidity ^0.6.0;
 
-import "./IBEP20.sol";
+import "../interfaces/IBEP20.sol";
+import "../interfaces/ISwap.sol";
 import "openzeppelin-solidity/contracts/GSN/Context.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/proxy/Initializable.sol";
 
-contract BEP20TokenImplementation is Context, IBEP20, Initializable {
+contract BEP20TokenImplementation is Context, IBEP20, ISwap, Initializable {
     using SafeMath for uint256;
 
     mapping (address => uint256) private _balances;
@@ -224,7 +225,7 @@ contract BEP20TokenImplementation is Context, IBEP20, Initializable {
      * - `msg.sender` must be the token owner
      * - `_mintable` must be true
      */
-    function mintTo(uint256 amount, address recipient) public onlyOwner returns (bool) {
+    function mintTo(uint256 amount, address recipient) override external onlyOwner returns (bool) {
         require(_mintable, "this token is not mintable");
         _mint(recipient, amount);
         return true;
@@ -232,9 +233,9 @@ contract BEP20TokenImplementation is Context, IBEP20, Initializable {
 
 
     /**
-   * @dev Burn `amount` tokens and decreasing the total supply.
-   */
-    function burn(uint256 amount) public returns (bool) {
+    * @dev Burn `amount` tokens and decreasing the total supply.
+    */
+    function burn(uint256 amount) override external returns (bool) {
         _burn(_msgSender(), amount);
         return true;
     }
