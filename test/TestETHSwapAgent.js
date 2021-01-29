@@ -1,2 +1,2 @@
-const ETHSwapAgent = artifacts.require("ETHSwapAgent");
-const ETHSwapUpgradeableProxy = artifacts.require("ETHSwapUpgradeableProxy");
+const ETHSwapAgentImpl = artifacts.require("ETHSwapAgentImpl");
+const ETHSwapAgentUpgradeableProxy = artifacts.require("ETHSwapAgentUpgradeableProxy");

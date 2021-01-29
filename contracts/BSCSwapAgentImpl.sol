@@ -7,7 +7,7 @@ import './interfaces/IProxyInitialize.sol';
 import "openzeppelin-solidity/contracts/proxy/Initializable.sol";
 import "openzeppelin-solidity/contracts/GSN/Context.sol";
 
-contract  BSCSwapAgent is Context, Initializable {
+contract  BSCSwapAgentImpl is Context, Initializable {
     mapping(address => address) public swapMappingETH2BSC;
     mapping(address => address) public swapMappingBSC2ETH;
 
@@ -18,7 +18,7 @@ contract  BSCSwapAgent is Context, Initializable {
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event SwapPairCreated(bytes32 indexed ethRegisterTxHash, address indexed bep20Addr, address indexed erc20Addr, string symbol, string name, uint8 decimals);
-    event SwapStarted(address indexed bep20Addr, address indexed fromAddr, uint256 amount, uint256 feeAmount);
+    event SwapStarted(address indexed bep20Addr, address indexed erc20Addr, address indexed fromAddr, uint256 amount, uint256 feeAmount);
     event SwapFilled(address indexed bep20Addr, bytes32 indexed ethTxHash, address indexed toAddress, uint256 amount);
 
     constructor() public {
@@ -102,7 +102,8 @@ contract  BSCSwapAgent is Context, Initializable {
      * @dev swapBSC2ETH
      */
     function swapBSC2ETH(address bep20Addr, uint256 amount) payable external returns (bool) {
-        require(swapMappingBSC2ETH[bep20Addr] != address(0x0), "no swap pair for this token");
+        address erc20Addr = swapMappingBSC2ETH[bep20Addr];
+        require(erc20Addr != address(0x0), "no swap pair for this token");
         require(msg.value >= swapFee, "swap fee is not enough");
 
         IBEP20(bep20Addr).transferFrom(msg.sender, address(this), amount);
@@ -111,7 +112,7 @@ contract  BSCSwapAgent is Context, Initializable {
             owner.transfer(msg.value);
         }
 
-        emit SwapStarted(bep20Addr, msg.sender, amount, msg.value);
+        emit SwapStarted(bep20Addr, erc20Addr, msg.sender, amount, msg.value);
         return true;
     }
 }

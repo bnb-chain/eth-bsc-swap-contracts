@@ -1,2 +1,2 @@
-const BSCSwapAgent = artifacts.require("BSCSwapAgent");
-const BSCSwapUpgradeableProxy = artifacts.require("BSCSwapUpgradeableProxy");
+const BSCSwapAgentImpl = artifacts.require("BSCSwapAgentImpl");
+const BSCSwapAgentUpgradeableProxy = artifacts.require("BSCSwapAgentUpgradeableProxy");

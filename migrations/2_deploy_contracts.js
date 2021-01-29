@@ -1,8 +1,8 @@
 const BEP20TokenImplementation = artifacts.require("BEP20TokenImplementation");
-const BSCSwapAgent = artifacts.require("BSCSwapAgent");
-const ETHSwapAgent = artifacts.require("ETHSwapAgent");
-const BSCSwapUpgradeableProxy = artifacts.require("BSCSwapUpgradeableProxy");
-const ETHSwapUpgradeableProxy = artifacts.require("ETHSwapUpgradeableProxy");
+const BSCSwapAgentImpl = artifacts.require("BSCSwapAgentImpl");
+const ETHSwapAgentImpl = artifacts.require("ETHSwapAgentImpl");
+const BSCSwapAgentUpgradeableProxy = artifacts.require("BSCSwapAgentUpgradeableProxy");
+const ETHSwapAgentUpgradeableProxy = artifacts.require("ETHSwapAgentUpgradeableProxy");
 
 const Web3 = require('web3');
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
@@ -13,7 +13,7 @@ module.exports = function(deployer, network, accounts) {
     bep20ProxyAdmin = accounts[2];
     deployer.then(async () => {
         await deployer.deploy(BEP20TokenImplementation);
-        await deployer.deploy(BSCSwapAgent);
+        await deployer.deploy(BSCSwapAgentImpl);
         let abiEncodeInitializeData = web3.eth.abi.encodeFunctionCall({
             "inputs": [
                 {
@@ -42,9 +42,9 @@ module.exports = function(deployer, network, accounts) {
             "stateMutability": "nonpayable",
             "type": "function"
         }, [BEP20TokenImplementation.address, "10000000000000000", owner, bep20ProxyAdmin]);
-        await deployer.deploy(BSCSwapUpgradeableProxy, BSCSwapAgent.address, proxyAdmin, abiEncodeInitializeData);
+        await deployer.deploy(BSCSwapAgentUpgradeableProxy, BSCSwapAgentImpl.address, proxyAdmin, abiEncodeInitializeData);
 
-        await deployer.deploy(ETHSwapAgent);
+        await deployer.deploy(ETHSwapAgentImpl);
         abiEncodeInitializeData = web3.eth.abi.encodeFunctionCall({
             "inputs": [
                 {
@@ -63,6 +63,6 @@ module.exports = function(deployer, network, accounts) {
             "stateMutability": "nonpayable",
             "type": "function"
         }, [0, owner]);
-        await deployer.deploy(ETHSwapUpgradeableProxy, ETHSwapAgent.address, proxyAdmin, abiEncodeInitializeData);
+        await deployer.deploy(ETHSwapAgentUpgradeableProxy, ETHSwapAgentImpl.address, proxyAdmin, abiEncodeInitializeData);
     });
 };

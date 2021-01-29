@@ -5,7 +5,7 @@ import "openzeppelin-solidity/contracts/proxy/Initializable.sol";
 import "openzeppelin-solidity/contracts/GSN/Context.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
-contract ETHSwapAgent is Context, Initializable {
+contract ETHSwapAgentImpl is Context, Initializable {
     using SafeERC20 for IERC20;
 
     mapping(address => bool) public registeredERC20;
