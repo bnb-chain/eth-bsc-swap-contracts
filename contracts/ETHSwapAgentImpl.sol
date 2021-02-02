@@ -13,7 +13,7 @@ contract ETHSwapAgentImpl is Context, Initializable {
     uint256 public swapFee;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    event SwapPairRegister(address indexed erc20Addr, string name, string symbol, uint8 decimals);
+    event SwapPairRegister(address indexed sponsor,address indexed erc20Addr, string name, string symbol, uint8 decimals);
     event SwapStarted(address indexed erc20Addr, address indexed fromAddr, uint256 amount, uint256 feeAmount);
     event SwapFilled(address indexed erc20Addr, bytes32 indexed bscTxHash, address indexed toAddress, uint256 amount);
 
@@ -74,7 +74,7 @@ contract ETHSwapAgentImpl is Context, Initializable {
 
         registeredERC20[erc20Addr] = true;
 
-        emit SwapPairRegister(erc20Addr, name, symbol, decimals);
+        emit SwapPairRegister(msg.sender, erc20Addr, name, symbol, decimals);
         return true;
     }
 
