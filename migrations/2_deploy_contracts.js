@@ -4,6 +4,9 @@ const ETHSwapAgentImpl = artifacts.require("ETHSwapAgentImpl");
 const BSCSwapAgentUpgradeableProxy = artifacts.require("BSCSwapAgentUpgradeableProxy");
 const ETHSwapAgentUpgradeableProxy = artifacts.require("ETHSwapAgentUpgradeableProxy");
 
+const ERC20ABC = artifacts.require("ERC20ABC");
+const ERC20DEF = artifacts.require("ERC20DEF");
+
 const Web3 = require('web3');
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 
@@ -12,6 +15,9 @@ module.exports = function(deployer, network, accounts) {
     proxyAdmin = accounts[1];
     bep20ProxyAdmin = accounts[2];
     deployer.then(async () => {
+        await deployer.deploy(ERC20ABC);
+        await deployer.deploy(ERC20DEF);
+
         await deployer.deploy(BEP20TokenImplementation);
         await deployer.deploy(BSCSwapAgentImpl);
         let abiEncodeInitializeData = web3.eth.abi.encodeFunctionCall({
