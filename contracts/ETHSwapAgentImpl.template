@@ -1,12 +1,14 @@
 pragma solidity 0.6.4;
 
 import "./interfaces/IERC20Query.sol";
-import "openzeppelin-solidity/contracts/proxy/Initializable.sol";
+{% if mock %}{% else %}import "openzeppelin-solidity/contracts/proxy/Initializable.sol";{% endif %}
 import "openzeppelin-solidity/contracts/GSN/Context.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
-
+{% if mock %}
+contract ETHSwapAgentImpl is Context {
+{% else %}
 contract ETHSwapAgentImpl is Context, Initializable {
-
+{% endif %}
     using SafeERC20 for IERC20;
 
     mapping(address => bool) public registeredERC20;
@@ -17,10 +19,15 @@ contract ETHSwapAgentImpl is Context, Initializable {
     event SwapPairRegister(address indexed sponsor,address indexed erc20Addr, string name, string symbol, uint8 decimals);
     event SwapStarted(address indexed erc20Addr, address indexed fromAddr, uint256 amount, uint256 feeAmount);
     event SwapFilled(address indexed erc20Addr, bytes32 indexed bscTxHash, address indexed toAddress, uint256 amount);
-
+{% if mock %}
+    constructor(uint256 fee) public {
+        swapFee = fee;
+        owner = _msgSender();
+    }
+{% else %}
     constructor() public {
     }
-
+{% endif %}
     /**
      * @dev Throws if called by any account other than the owner.
      */
@@ -28,12 +35,12 @@ contract ETHSwapAgentImpl is Context, Initializable {
         require(owner == _msgSender(), "Ownable: caller is not the owner");
         _;
     }
-
+{% if mock %}{% else %}
     function initialize(uint256 fee, address payable ownerAddr) public initializer {
         swapFee = fee;
         owner = ownerAddr;
     }
-
+{% endif %}
     modifier notContract() {
         require(!isContract(msg.sender), "contract is not allowed to be a relayer");
         _;

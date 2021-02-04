@@ -14,7 +14,9 @@
     "lint:js": "eslint test/**/*.js",
     "lint:sol:fix": "solium -d contracts/ --fix",
     "lint:sol": "solium -d contracts/",
-    "flatten": "truffle-flattener contracts/bep20/BEP20UpgradeableProxy.sol > contracts/flattened/BEP20UpgradeableProxy.sol && truffle-flattener contracts/bep20/BEP20TokenImplementation.sol > contracts/flattened/BEP20TokenImplementation.sol && truffle-flattener contracts/BSCSwapAgentImpl.sol > contracts/flattened/BSCSwapAgentImpl.sol && truffle-flattener contracts/BSCSwapAgentUpgradeableProxy.sol > contracts/flattened/BSCSwapAgentUpgradeableProxy.sol && truffle-flattener contracts/ETHSwapAgentUpgradeableProxy.sol > contracts/flattened/ETHSwapAgentUpgradeableProxy.sol && truffle-flattener contracts/ETHSwapAgentImpl.sol > contracts/flattened/ETHSwapAgentImpl.sol"
+    "flatten": "truffle-flattener contracts/bep20/BEP20UpgradeableProxy.sol > contracts/flattened/BEP20UpgradeableProxy.sol && truffle-flattener contracts/bep20/BEP20TokenImplementation.sol > contracts/flattened/BEP20TokenImplementation.sol && truffle-flattener contracts/BSCSwapAgentImpl.sol > contracts/flattened/BSCSwapAgentImpl.sol && truffle-flattener contracts/BSCSwapAgentUpgradeableProxy.sol > contracts/flattened/BSCSwapAgentUpgradeableProxy.sol && truffle-flattener contracts/ETHSwapAgentUpgradeableProxy.sol > contracts/flattened/ETHSwapAgentUpgradeableProxy.sol && truffle-flattener contracts/ETHSwapAgentImpl.sol > contracts/flattened/ETHSwapAgentImpl.sol",
+    "generate": "node generate-bsc-swap-agent.js && node generate-eth-swap-agent.js",
+    "generate-test": "node generate-bsc-swap-agent.js --mock true && node generate-eth-swap-agent.js --mock true"
   },
   "author": "",
   "license": "MIT",

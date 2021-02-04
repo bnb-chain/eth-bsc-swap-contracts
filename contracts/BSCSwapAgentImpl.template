@@ -4,11 +4,13 @@ import "./interfaces/ISwap.sol";
 import "./interfaces/IBEP20.sol";
 import "./bep20/BEP20UpgradeableProxy.sol";
 import './interfaces/IProxyInitialize.sol';
-import "openzeppelin-solidity/contracts/proxy/Initializable.sol";
+{% if mock %}{% else %}import "openzeppelin-solidity/contracts/proxy/Initializable.sol";{% endif %}
 import "openzeppelin-solidity/contracts/GSN/Context.sol";
-
+{% if mock %}
+contract  BSCSwapAgentImpl is Context {
+{% else %}
 contract  BSCSwapAgentImpl is Context, Initializable {
-
+{% endif %}
     mapping(address => address) public swapMappingETH2BSC;
     mapping(address => address) public swapMappingBSC2ETH;
 
@@ -21,10 +23,17 @@ contract  BSCSwapAgentImpl is Context, Initializable {
     event SwapPairCreated(bytes32 indexed ethRegisterTxHash, address indexed bep20Addr, address indexed erc20Addr, string symbol, string name, uint8 decimals);
     event SwapStarted(address indexed bep20Addr, address indexed erc20Addr, address indexed fromAddr, uint256 amount, uint256 feeAmount);
     event SwapFilled(address indexed bep20Addr, bytes32 indexed ethTxHash, address indexed toAddress, uint256 amount);
-
+{% if mock %}
+    constructor(address bep20Impl, uint256 fee, address bep20ProxyAdminAddr) public {
+        bep20Implementation = bep20Impl;
+        swapFee = fee;
+        owner = _msgSender();
+        bep20ProxyAdmin = bep20ProxyAdminAddr;
+    }
+{% else %}
     constructor() public {
     }
-
+{% endif %}
     /**
      * @dev Throws if called by any account other than the owner.
      */
@@ -43,14 +52,15 @@ contract  BSCSwapAgentImpl is Context, Initializable {
         _;
     }
 
-
+{% if mock %}
+{% else %}
     function initialize(address bep20Impl, uint256 fee, address payable ownerAddr, address bep20ProxyAdminAddr) public initializer {
         bep20Implementation = bep20Impl;
         swapFee = fee;
         owner = ownerAddr;
         bep20ProxyAdmin = bep20ProxyAdminAddr;
     }
-
+{% endif %}
     function isContract(address addr) internal view returns (bool) {
         uint size;
         assembly { size := extcodesize(addr) }
