@@ -182,4 +182,25 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
         assert.ok(swapFee.toString() === "100000");
     });
 
+    it('ETH ownership', async () => {
+        const ethSwap = await ETHSwapAgentImpl.deployed();
+
+        await ethSwap.transferOwnership(accounts[1], {from: accounts[0]});
+        let newOwner = await ethSwap.owner();
+
+        assert.ok(newOwner === accounts[1]);
+
+        await ethSwap.renounceOwnership({from: accounts[1]});
+    });
+
+    it('BSC ownership', async () => {
+        const bscSwap = await BSCSwapAgentImpl.deployed();
+
+        await bscSwap.transferOwnership(accounts[1], {from: accounts[0]});
+        let newOwner = await bscSwap.owner();
+
+        assert.ok(newOwner === accounts[1]);
+
+        await bscSwap.renounceOwnership({from: accounts[1]});
+    });
 });

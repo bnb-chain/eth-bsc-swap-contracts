@@ -2,3 +2,5 @@
 node_modules
 build
 contracts/flattened/*.sol
+coverage
+coverage.json

@@ -9,6 +9,7 @@
     "truffle:test": "truffle test",
     "truffle:compile": "truffle compile",
     "truffle:migrate": "truffle migrate",
+    "coverage": "truffle run coverage --network development",
     "test:ci": "scripts/run-test.sh",
     "lint": "npm run lint:sol && npm run lint:js",
     "lint:js": "eslint test/**/*.js",
@@ -35,6 +36,7 @@
     "elliptic": ">=6.5.3",
     "minimist": ">=1.2.3",
     "mem": ">=4.0.0",
-    "lodash": ">=4.17.19"
+    "lodash": ">=4.17.19",
+    "solidity-coverage": "0.7.14"
   }
 }
