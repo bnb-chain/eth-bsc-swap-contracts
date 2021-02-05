@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "testrpc": "ganache-cli --gasLimit 13000000 -e 100000",
+    "testrpc": "ganache-cli --gasLimit 13000000 -e 100000 -i 123",
     "truffle": "truffle",
     "truffle:test": "truffle test",
     "truffle:compile": "truffle compile",

@@ -10,6 +10,7 @@ contract ETHSwapAgentImpl is Context, Initializable {
     using SafeERC20 for IERC20;
 
     mapping(address => bool) public registeredERC20;
+    mapping(bytes32 => bool) public filledBSCTx;
     address payable public owner;
     uint256 public swapFee;
 
@@ -96,8 +97,12 @@ contract ETHSwapAgentImpl is Context, Initializable {
     }
 
     function fillBSC2ETHSwap(bytes32 bscTxHash, address erc20Addr, address toAddress, uint256 amount) onlyOwner external returns (bool) {
+        require(!filledBSCTx[bscTxHash], "bsc tx filled already");
         require(registeredERC20[erc20Addr], "not registered token");
+
         IERC20(erc20Addr).safeTransfer(toAddress, amount);
+        filledBSCTx[bscTxHash] = true;
+
         emit SwapFilled(erc20Addr, bscTxHash, toAddress, amount);
         return true;
     }

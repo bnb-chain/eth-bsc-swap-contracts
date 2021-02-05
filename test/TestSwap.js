@@ -126,6 +126,22 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
             await ethSwap.fillBSC2ETHSwap(swapTxFromETH2BSC, ERC20DEF.address, accounts[0], "100000", {from: accounts[0]})
             assert.fail();
         } catch (error) {
+            assert.ok(error.toString().includes("bsc tx filled already"))
+        }
+
+        // fill filled tx
+        try {
+            await ethSwap.fillBSC2ETHSwap(swapTxFromETH2BSC, ERC20DEF.address, accounts[0], "100000", {from: accounts[0]})
+            assert.fail();
+        } catch (error) {
+            assert.ok(error.toString().includes("bsc tx filled already"))
+        }
+
+        // fill unregistered token
+        try {
+            await ethSwap.fillBSC2ETHSwap("0x01", ERC20DEF.address, accounts[0], "100000", {from: accounts[0]})
+            assert.fail();
+        } catch (error) {
             assert.ok(error.toString().includes("not registered token"))
         }
     });
@@ -155,11 +171,20 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
             return ev.bep20Addr === createdBEP20TokenAddr && ev.erc20Addr === ERC20ABC.address && ev.amount.toString() === "100000";
         });
 
-        // fill unregistered
+        // fill filled tx
         try {
             await bscSwap.fillETH2BSCSwap(swapTxFromETH2BSC, ERC20DEF.address, accounts[0], "100000", {from: accounts[0]});
             assert.fail();
         } catch (error) {
+            assert.ok(error.toString().includes("eth tx filled already"))
+        }
+
+        // fill unregistered token
+        try {
+            await bscSwap.fillETH2BSCSwap("0x01", ERC20DEF.address, accounts[0], "100000", {from: accounts[0]});
+            assert.fail();
+        } catch (error) {
+            console.log("xxxx: ", error.toString())
             assert.ok(error.toString().includes("no swap pair for this token"))
         }
     });
