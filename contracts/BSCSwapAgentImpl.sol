@@ -1,13 +1,16 @@
 pragma solidity 0.6.4;
 
 import "./interfaces/ISwap.sol";
-import "./interfaces/IBEP20.sol";
 import "./bep20/BEP20UpgradeableProxy.sol";
 import './interfaces/IProxyInitialize.sol';
+import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 import "openzeppelin-solidity/contracts/proxy/Initializable.sol";
 import "openzeppelin-solidity/contracts/GSN/Context.sol";
 
 contract  BSCSwapAgentImpl is Context, Initializable {
+
+
+    using SafeERC20 for IERC20;
 
     mapping(address => address) public swapMappingETH2BSC;
     mapping(address => address) public swapMappingBSC2ETH;
@@ -126,7 +129,7 @@ contract  BSCSwapAgentImpl is Context, Initializable {
         require(erc20Addr != address(0x0), "no swap pair for this token");
         require(msg.value >= swapFee, "swap fee is not enough");
 
-        IBEP20(bep20Addr).transferFrom(msg.sender, address(this), amount);
+        IERC20(bep20Addr).safeTransferFrom(msg.sender, address(this), amount);
         ISwap(bep20Addr).burn(amount);
         if (msg.value != 0) {
             owner.transfer(msg.value);
