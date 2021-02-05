@@ -11,6 +11,9 @@ contract  BSCSwapAgentImpl is Context, Initializable {
     mapping(address => address) public swapMappingETH2BSC;
     mapping(address => address) public swapMappingBSC2ETH;
 
+    mapping(address => bool) public isERC20MappingToExistingBEP20;
+    mapping(address => bool) public isExistingBEP20;
+
     address payable public owner;
     address public bep20ProxyAdmin;
     address public bep20Implementation;
@@ -85,6 +88,35 @@ contract  BSCSwapAgentImpl is Context, Initializable {
         return address(token);
     }
 
+    function compareStrings(string memory a, string memory b) internal pure returns (bool) {
+        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
+    }
+
+    /**
+     * @dev addSwapPair
+     */
+    function addSwapPairForExistingBEP20(address bep20Addr, address erc20Addr, string memory erc20Name, string memory erc20Symbol, string memory erc20Decimals) onlyOwner external returns (bool) {
+        require(swapMappingETH2BSC[erc20Addr] != address(0x0), "duplicated erc20");
+        require(swapMappingBSC2ETH[bep20Addr] != address(0x0), "duplicated bep20");
+
+        string memory name = IBEP20(bep20Addr).name();
+        string memory symbol = IBEP20(bep20Addr).symbol();
+        uint8 decimals = IBEP20(bep20Addr).decimals();
+
+        require(compareStrings(name, erc20Name), "name mismatch");
+        require(compareStrings(symbol, erc20Symbol), "symbol mismatch");
+        require(decimals == erc20Decimals, "decimals mismatch");
+
+        swapMappingETH2BSC[erc20Addr] = bep20Addr;
+        swapMappingBSC2ETH[bep20Addr] = erc20Addr;
+        isERC20MappingToExistingBEP20[erc20Addr] = true;
+        isExistingBEP20[bep20Addr] = true;
+
+        emit SwapPairCreated(bytes32(0x00), bep20Addr, erc20Addr, symbol, name, decimals);
+
+        return true;
+    }
+
     /**
      * @dev fillETH2BSCSwap
      */
@@ -92,7 +124,11 @@ contract  BSCSwapAgentImpl is Context, Initializable {
         address bscTokenAddr = swapMappingETH2BSC[erc20Addr];
         require(bscTokenAddr != address(0x0), "no swap pair for this token");
 
-        ISwap(bscTokenAddr).mintTo(amount, toAddress);
+        if (isERC20MappingToExistingBEP20[erc20Addr]) {
+            IBEP20(bscTokenAddr).transfer(toAddress, amount);
+        } else {
+            ISwap(bscTokenAddr).mintTo(amount, toAddress);
+        }
         emit SwapFilled(bscTokenAddr, ethTxHash, toAddress, amount);
 
         return true;
@@ -107,7 +143,9 @@ contract  BSCSwapAgentImpl is Context, Initializable {
         require(msg.value >= swapFee, "swap fee is not enough");
 
         IBEP20(bep20Addr).transferFrom(msg.sender, address(this), amount);
-        ISwap(bep20Addr).burn(amount);
+        if (!isExistingBEP20[bep20Addr]) {
+            ISwap(bep20Addr).burn(amount);
+        }
         if (msg.value != 0) {
             owner.transfer(msg.value);
         }
