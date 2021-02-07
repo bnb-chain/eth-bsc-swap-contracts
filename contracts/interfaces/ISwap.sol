@@ -12,7 +12,6 @@ interface ISwap {
      */
     function mintTo(uint256 amount, address recipient) external returns (bool);
 
-
     /**
     * @dev Burn `amount` tokens and decreasing the total supply.
     */
