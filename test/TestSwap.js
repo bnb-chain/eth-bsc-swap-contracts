@@ -19,17 +19,9 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
         const ethSwap = await ETHSwapAgentImpl.deployed();
         const bscSwap = await BSCSwapAgentImpl.deployed();
 
-        const ethSwapABIJsonFile = "test/abi/ethSwapABI.json";
-        const ethSwapABI= JSON.parse(fs.readFileSync(ethSwapABIJsonFile));
-        const ethSwapInstance = new web3.eth.Contract(ethSwapABI, ETHSwapAgentImpl.address);
-
-        const bscSwapABIJsonFile = "test/abi/bscSwapABI.json";
-        const bscSwapABI= JSON.parse(fs.readFileSync(bscSwapABIJsonFile));
-        const bscSwapInstance = new web3.eth.Contract(bscSwapABI, BSCSwapAgentImpl.address);
-
-        let isERC20ABCRegistered = await ethSwapInstance.methods.registeredERC20(ERC20ABC.address).call();
+        let isERC20ABCRegistered = await ethSwap.registeredERC20(ERC20ABC.address);
         assert.equal(isERC20ABCRegistered, false, "wrong register status");
-        let isERC20DEFRegistered = await ethSwapInstance.methods.registeredERC20(ERC20DEF.address).call();
+        let isERC20DEFRegistered = await ethSwap.registeredERC20(ERC20DEF.address);
         assert.equal(isERC20DEFRegistered, false, "wrong register status");
 
         let registerTx = await ethSwap.registerSwapPairToBSC(ERC20ABC.address, {from: accounts[0]});
@@ -83,14 +75,6 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
     it('Swap from ETH to BSC', async () => {
         const ethSwap = await ETHSwapAgentImpl.deployed();
         const erc20ABC = await ERC20ABC.deployed();
-
-        const ethSwapABIJsonFile = "test/abi/ethSwapABI.json";
-        const ethSwapABI= JSON.parse(fs.readFileSync(ethSwapABIJsonFile));
-        const ethSwapInstance = new web3.eth.Contract(ethSwapABI, ETHSwapAgentImpl.address);
-
-        const bscSwapABIJsonFile = "test/abi/bscSwapABI.json";
-        const bscSwapABI= JSON.parse(fs.readFileSync(bscSwapABIJsonFile));
-        const bscSwapInstance = new web3.eth.Contract(bscSwapABI, BSCSwapAgentImpl.address);
 
         await erc20ABC.approve(ETHSwapAgentImpl.address, "1000000000000", {from: accounts[0]})
 
@@ -149,14 +133,9 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
     it('Swap from BSC to ETH', async () => {
         const bscSwap = await BSCSwapAgentImpl.deployed();
 
-        const bscSwapABIJsonFile = "test/abi/bscSwapABI.json";
-        const bscSwapABI= JSON.parse(fs.readFileSync(bscSwapABIJsonFile));
-        const bscSwapInstance = new web3.eth.Contract(bscSwapABI, BSCSwapAgentImpl.address);
-
-        const erc0ABIJsonFile = "test/abi/erc20ABI.json";
-        const erc20ABI= JSON.parse(fs.readFileSync(erc0ABIJsonFile));
+        const erc20ABIJsonFile = "test/abi/erc20ABI.json";
+        const erc20ABI= JSON.parse(fs.readFileSync(erc20ABIJsonFile));
         const createdBEP2OToken = new web3.eth.Contract(erc20ABI, createdBEP20TokenAddr);
-
 
         await createdBEP2OToken.methods.approve(BSCSwapAgentImpl.address, "1000000000000").send({from: accounts[0]});
 
