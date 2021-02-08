@@ -38,7 +38,7 @@ contract  BSCSwapAgentImpl is Context, Initializable {
     }
 
     modifier notContract() {
-        require(!isContract(msg.sender), "contract is not allowed to be a relayer");
+        require(!isContract(msg.sender), "contract is not allowed to swap");
         _;
     }
 

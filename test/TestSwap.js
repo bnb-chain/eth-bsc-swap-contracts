@@ -32,7 +32,7 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
         let isERC20DEFRegistered = await ethSwapInstance.methods.registeredERC20(ERC20DEF.address).call();
         assert.equal(isERC20DEFRegistered, false, "wrong register status");
 
-        let registerTx = await ethSwap.registerSwapToBSC(ERC20ABC.address, {from: accounts[0]});
+        let registerTx = await ethSwap.registerSwapPairToBSC(ERC20ABC.address, {from: accounts[0]});
         console.log("tx: ", registerTx)
         console.log("tx: ", registerTx.tx)
         truffleAssert.eventEmitted(registerTx, "SwapPairRegister",(ev) => {
@@ -57,7 +57,7 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
 
         // registered
         try {
-            await ethSwap.registerSwapToBSC(ERC20ABC.address, {from: accounts[0]});
+            await ethSwap.registerSwapPairToBSC(ERC20ABC.address, {from: accounts[0]});
             assert.fail();
         } catch (error) {
             assert.ok(error.toString().includes("already registered"))
@@ -65,7 +65,7 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
 
         // empty name
         try {
-            await ethSwap.registerSwapToBSC(ERC20EMPTYNAME.address, {from: accounts[0]});
+            await ethSwap.registerSwapPairToBSC(ERC20EMPTYNAME.address, {from: accounts[0]});
             assert.fail();
         } catch (error) {
             assert.ok(error.toString().includes("empty name"))
@@ -73,7 +73,7 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
 
         // empty symbol
         try {
-            await ethSwap.registerSwapToBSC(ERC20EMPTYSYMBOL.address, {from: accounts[0]});
+            await ethSwap.registerSwapPairToBSC(ERC20EMPTYSYMBOL.address, {from: accounts[0]});
             assert.fail();
         } catch (error) {
             assert.ok(error.toString().includes("empty symbol"))

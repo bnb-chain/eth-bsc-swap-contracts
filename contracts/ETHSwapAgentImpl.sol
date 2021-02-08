@@ -36,7 +36,7 @@ contract ETHSwapAgentImpl is Context, Initializable {
     }
 
     modifier notContract() {
-        require(!isContract(msg.sender), "contract is not allowed to be a relayer");
+        require(!isContract(msg.sender), "contract is not allowed to swap");
         _;
     }
 
@@ -80,7 +80,7 @@ contract ETHSwapAgentImpl is Context, Initializable {
         swapFee = fee;
     }
 
-    function registerSwapToBSC(address erc20Addr) external returns (bool) {
+    function registerSwapPairToBSC(address erc20Addr) external returns (bool) {
         require(!registeredERC20[erc20Addr], "already registered");
 
         string memory name = IERC20Query(erc20Addr).name();

@@ -233,7 +233,7 @@
         "type": "address"
       }
     ],
-    "name": "registerSwapToBSC",
+    "name": "registerSwapPairToBSC",
     "outputs": [
       {
         "internalType": "bool",
