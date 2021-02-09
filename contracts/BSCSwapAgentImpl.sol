@@ -39,13 +39,10 @@ contract  BSCSwapAgentImpl is Context, Initializable {
 
     modifier notContract() {
         require(!isContract(msg.sender), "contract is not allowed to swap");
-        _;
+        require(msg.sender == tx.origin, "no proxy contract is allowed");
+       _;
     }
 
-    modifier noProxy() {
-        require(msg.sender == tx.origin, "no proxy is allowed");
-        _;
-    }
 
 
     function initialize(address bep20Impl, uint256 fee, address payable ownerAddr, address bep20ProxyAdminAddr) public initializer {
@@ -114,9 +111,8 @@ contract  BSCSwapAgentImpl is Context, Initializable {
         require(!filledETHTx[ethTxHash], "eth tx filled already");
         address bscTokenAddr = swapMappingETH2BSC[erc20Addr];
         require(bscTokenAddr != address(0x0), "no swap pair for this token");
-
-        ISwap(bscTokenAddr).mintTo(amount, toAddress);
         filledETHTx[ethTxHash] = true;
+        ISwap(bscTokenAddr).mintTo(amount, toAddress);
         emit SwapFilled(bscTokenAddr, ethTxHash, toAddress, amount);
 
         return true;
@@ -124,10 +120,10 @@ contract  BSCSwapAgentImpl is Context, Initializable {
     /**
      * @dev swapBSC2ETH
      */
-    function swapBSC2ETH(address bep20Addr, uint256 amount) payable external notContract noProxy returns (bool) {
+    function swapBSC2ETH(address bep20Addr, uint256 amount) payable external notContract returns (bool) {
         address erc20Addr = swapMappingBSC2ETH[bep20Addr];
         require(erc20Addr != address(0x0), "no swap pair for this token");
-        require(msg.value >= swapFee, "swap fee is not enough");
+        require(msg.value == swapFee, "swap fee not equal");
 
         IERC20(bep20Addr).safeTransferFrom(msg.sender, address(this), amount);
         ISwap(bep20Addr).burn(amount);

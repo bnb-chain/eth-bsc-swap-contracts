@@ -25,8 +25,6 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
         assert.equal(isERC20DEFRegistered, false, "wrong register status");
 
         let registerTx = await ethSwap.registerSwapPairToBSC(ERC20ABC.address, {from: accounts[0]});
-        console.log("tx: ", registerTx)
-        console.log("tx: ", registerTx.tx)
         truffleAssert.eventEmitted(registerTx, "SwapPairRegister",(ev) => {
             return ev.erc20Addr === ERC20ABC.address && ev.name.toString() === "ABC token" && ev.symbol.toString() === "ABC" && ev.decimals.toString() === "18";
         });
@@ -35,7 +33,6 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
         let createTx = await bscSwap.createSwapPair(registerTx.tx, ERC20ABC.address, "ABC token", "ABC", web3.utils.toBN(18), {from: accounts[0]});
         truffleAssert.eventEmitted(createTx, "SwapPairCreated",(ev) => {
             createdBEP20TokenAddr = ev.bep20Addr;
-            console.log("created bep20 token: ", createdBEP20TokenAddr)
             return ev.ethRegisterTxHash === registerTx.tx && ev.erc20Addr === ERC20ABC.address && ev.symbol.toString() === "ABC" && ev.decimals.toString() === "18";
         });
 
@@ -82,7 +79,7 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
             await ethSwap.swapETH2BSC(ERC20ABC.address, "100000", {from: accounts[0]})
             assert.fail();
         } catch (error) {
-            assert.ok(error.toString().includes("swap fee is not enough"))
+            assert.ok(error.toString().includes("swap fee not equal"))
         }
 
         try {
@@ -163,7 +160,6 @@ contract('ETHSwapAgent and BSCSwapAgent', (accounts) => {
             await bscSwap.fillETH2BSCSwap("0x01", ERC20DEF.address, accounts[0], "100000", {from: accounts[0]});
             assert.fail();
         } catch (error) {
-            console.log("xxxx: ", error.toString())
             assert.ok(error.toString().includes("no swap pair for this token"))
         }
     });
