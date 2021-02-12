@@ -44,12 +44,8 @@ contract ETHSwapAgentImpl is Context, Initializable {
 {% endif %}
     modifier notContract() {
         require(!isContract(msg.sender), "contract is not allowed to swap");
-        _;
-    }
-
-    modifier noProxy() {
-        require(msg.sender == tx.origin, "no proxy is allowed");
-        _;
+        require(msg.sender == tx.origin, "no proxy contract is allowed");
+       _;
     }
 
     function isContract(address addr) internal view returns (bool) {
@@ -107,16 +103,16 @@ contract ETHSwapAgentImpl is Context, Initializable {
         require(!filledBSCTx[bscTxHash], "bsc tx filled already");
         require(registeredERC20[erc20Addr], "not registered token");
 
-        IERC20(erc20Addr).safeTransfer(toAddress, amount);
         filledBSCTx[bscTxHash] = true;
+        IERC20(erc20Addr).safeTransfer(toAddress, amount);
 
         emit SwapFilled(erc20Addr, bscTxHash, toAddress, amount);
         return true;
     }
 
-    function swapETH2BSC(address erc20Addr, uint256 amount) payable external notContract noProxy returns (bool) {
+    function swapETH2BSC(address erc20Addr, uint256 amount) payable external notContract returns (bool) {
         require(registeredERC20[erc20Addr], "not registered token");
-        require(msg.value >= swapFee, "swap fee is not enough");
+        require(msg.value == swapFee, "swap fee not equal");
 
         IERC20(erc20Addr).safeTransferFrom(msg.sender, address(this), amount);
         if (msg.value != 0) {
