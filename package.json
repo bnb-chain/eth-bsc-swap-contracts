@@ -4,14 +4,27 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "flatten": "truffle-flattener contracts/SwapProxy.sol > contracts/flattened/SwapProxy.sol"
+    "testrpc": "ganache-cli --gasLimit 13000000 -e 100000 -i 123",
+    "truffle": "truffle",
+    "truffle:test": "truffle test",
+    "truffle:compile": "truffle compile",
+    "truffle:migrate": "truffle migrate",
+    "coverage": "truffle run coverage --network development",
+    "test:ci": "scripts/run-test.sh",
+    "lint": "npm run lint:sol && npm run lint:js",
+    "lint:js": "eslint test/**/*.js",
+    "lint:sol:fix": "solium -d contracts/ --fix",
+    "lint:sol": "solium -d contracts/",
+    "flatten": "truffle-flattener contracts/bep20/BEP20UpgradeableProxy.sol > contracts/flattened/BEP20UpgradeableProxy.sol && truffle-flattener contracts/bep20/BEP20TokenImplementation.sol > contracts/flattened/BEP20TokenImplementation.sol && truffle-flattener contracts/BSCSwapAgentImpl.sol > contracts/flattened/BSCSwapAgentImpl.sol && truffle-flattener contracts/BSCSwapAgentUpgradeableProxy.sol > contracts/flattened/BSCSwapAgentUpgradeableProxy.sol && truffle-flattener contracts/ETHSwapAgentUpgradeableProxy.sol > contracts/flattened/ETHSwapAgentUpgradeableProxy.sol && truffle-flattener contracts/ETHSwapAgentImpl.sol > contracts/flattened/ETHSwapAgentImpl.sol",
+    "generate": "node generate-bsc-swap-agent.js && node generate-eth-swap-agent.js",
+    "generate-test": "node generate-bsc-swap-agent.js --mock true && node generate-eth-swap-agent.js --mock true"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "commander": "^3.0.1",
     "nunjucks": "^3.2.0",
-    "@openzeppelin/contracts": "^3.1.0",
+    "openzeppelin-solidity": "3.3.0",
     "solidity-bytes-utils": "0.0.8",
     "solium": "^1.2.5",
     "truffle-assertions": "0.9.2",
@@ -19,6 +32,11 @@
     "web3": "1.2.6",
     "await-sleep": "0.0.1",
     "ethereum-input-data-decoder": "0.3.0",
-    "rlp": "2.2.5"
+    "rlp": "2.2.5",
+    "elliptic": ">=6.5.3",
+    "minimist": ">=1.2.3",
+    "mem": ">=4.0.0",
+    "lodash": ">=4.17.19",
+    "solidity-coverage": "0.7.14"
   }
 }
