@@ -1,5 +1,9 @@
 # ETH BSC Swap Contracts
 
+## Security Report
+
+[here](SecurityAssessment.pdf)
+
 ## Overview
 ETH BSC Swap Contracts are responsible for registering swap pairs and swapping assets between ETH and BSC.
 
